@@ -30,11 +30,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		9174A21130160BE9008AB96C /* iVault */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = iVault;
-			sourceTree = "<group>";
-		};
 		9174A21F30160BEC008AB96C /* iVaultTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = iVaultTests;
@@ -43,6 +38,11 @@
 		9174A22930160BEC008AB96C /* iVaultUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = iVaultUITests;
+			sourceTree = "<group>";
+		};
+		9174A24430160C02008AB96C /* iVault */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = iVault;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -75,10 +75,10 @@
 		9174A20630160BE9008AB96C = {
 			isa = PBXGroup;
 			children = (
-				9174A21130160BE9008AB96C /* iVault */,
 				9174A21F30160BEC008AB96C /* iVaultTests */,
 				9174A22930160BEC008AB96C /* iVaultUITests */,
 				9174A21030160BE9008AB96C /* Products */,
+				9174A24430160C02008AB96C /* iVault */,
 			);
 			sourceTree = "<group>";
 		};
@@ -108,7 +108,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				9174A21130160BE9008AB96C /* iVault */,
+				9174A24430160C02008AB96C /* iVault */,
 			);
 			name = iVault;
 			packageProductDependencies = (
