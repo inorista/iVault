@@ -6,11 +6,22 @@
 //
 
 import Testing
+@testable import iVault
 
 struct iVaultTests {
 
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+    @Test
+    @MainActor
+    func spacingScaleIsStrictlyIncreasing() {
+        #expect(PassVaultSpacing.xSmall < PassVaultSpacing.small)
+        #expect(PassVaultSpacing.small < PassVaultSpacing.medium)
+        #expect(PassVaultSpacing.medium < PassVaultSpacing.large)
+        #expect(PassVaultSpacing.large < PassVaultSpacing.xLarge)
+    }
+
+    @Test
+    func tabBarContainsTheFiveDocumentedDestinations() {
+        #expect(PassVaultTab.allCases.count == 5)
     }
 
 }
