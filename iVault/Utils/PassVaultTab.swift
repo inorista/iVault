@@ -6,12 +6,16 @@ enum PassVaultTab: String, CaseIterable, Identifiable {
 
     var id: Self { self }
 
-    var title: String {
-        switch self {
-        case .home: "Home"
-        case .vault: "Vault"
-        case .generator: "Generator"
-        case .settings: "Settings"
+    func imagePath(isActive: Bool) -> String {
+        return switch self {
+        case .home:
+            isActive ? "HomeActiveIcon" : "HomeInactiveIcon"
+        case .vault:
+            isActive ? "VaultActiveIcon" : "VaultInactiveIcon"
+        case .generator:
+            isActive ? "GeneratorActiveIcon" : "GeneratorInactiveIcon"
+        case .settings:
+            isActive ? "SettingActiveIcon" : "SettingInactiveIcon"
         }
     }
 }

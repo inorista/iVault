@@ -1,49 +1,56 @@
 import SwiftUI
 
 struct MainScreen: View {
-    @State private var viewModel = MainViewModel()
+    @State private var selectedTab = PassVaultTab.home
 
     var body: some View {
-        TabView(selection: $viewModel.selectedTab) {
+        TabView(selection: $selectedTab) {
             Text("HomeScreen")
                 .toolbarBackground(.visible, for: .tabBar)
                 .toolbarBackground(.ultraThinMaterial, for: .tabBar)
                 .tabItem {
                     Image(
-                        AppTab.home.imagePath(isActive: viewModel.selectedTab == .home)
+                        PassVaultTab.home.imagePath(
+                            isActive: selectedTab == .home
+                        )
                     )
                 }
-                .tag(AppTab.home)
-
+                .tag(PassVaultTab.home)
             Text("Vault")
                 .toolbarBackground(.visible, for: .tabBar)
                 .toolbarBackground(.ultraThinMaterial, for: .tabBar)
                 .tabItem {
                     Image(
-                        AppTab.vault.imagePath(isActive: viewModel.selectedTab == .vault)
+                        PassVaultTab.vault.imagePath(
+                            isActive: selectedTab == .vault
+                        )
                     )
                 }
-                .tag(AppTab.vault)
+                .tag(PassVaultTab.vault)
 
             Text("Generator")
                 .toolbarBackground(.visible, for: .tabBar)
                 .toolbarBackground(.ultraThinMaterial, for: .tabBar)
                 .tabItem {
                     Image(
-                        AppTab.generator.imagePath(isActive: viewModel.selectedTab == .generator)
+                        PassVaultTab.generator.imagePath(
+                            isActive: selectedTab == .generator
+                        )
                     )
                 }
-                .tag(AppTab.generator)
+                .tag(PassVaultTab.generator)
 
             Text("Setting")
                 .toolbarBackground(.visible, for: .tabBar)
                 .toolbarBackground(.ultraThinMaterial, for: .tabBar)
                 .tabItem {
                     Image(
-                        AppTab.setting.imagePath(isActive: viewModel.selectedTab == .settings)
+                        PassVaultTab.settings.imagePath(
+                            isActive: selectedTab == .settings
+                        )
                     )
                 }
-                .tag(AppTab.setting)
+                .tag(PassVaultTab.settings)
         }
         .tint(.white)
         .navigationDestination(for: AppRoute.self) { route in
