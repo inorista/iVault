@@ -14,6 +14,11 @@ struct ContentView: View {
     private var hasCompletedOnboarding = false
 
     @State private var isShowingSplash = true
+    let container: AppContainer
+
+    init(container: AppContainer) {
+        self.container = container
+    }
 
     var body: some View {
         ZStack {
@@ -21,7 +26,7 @@ struct ContentView: View {
                 SplashScreen()
                     .transition(.opacity)
             } else if hasCompletedOnboarding {
-                MainScreen()
+                VaultRootView(container: container)
                     .transition(.opacity)
             } else {
                 OnboardingView(userDefaultService: UserDefaultService.shared)

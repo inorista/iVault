@@ -6,7 +6,22 @@
 //
 
 import Foundation
+import Observation
 
-enum AppRoute: Hashable {
-    case passwordDetail(id: UUID)
+nonisolated enum VaultRoute: Hashable, Sendable {
+    case detail(UUID)
+}
+
+@MainActor
+@Observable
+final class VaultRouter {
+    var path: [VaultRoute] = []
+
+    func showDetail(id: UUID) {
+        path.append(.detail(id))
+    }
+
+    func popToRoot() {
+        path = []
+    }
 }

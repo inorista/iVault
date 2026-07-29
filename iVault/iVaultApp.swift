@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct iVaultApp: App {
+    @State private var container = AppContainer.live()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(container: container)
         }
     }
 }
