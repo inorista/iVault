@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol VaultServicing: Sendable {
+nonisolated protocol VaultServicing: Sendable {
     var isUnlocked: Bool { get async }
 
     func unlock() async throws
@@ -26,4 +26,8 @@ protocol VaultServicing: Sendable {
         id: UUID,
         with draft: VaultItemDraft,
     ) async throws
+
+    func fetchImageData(
+        assetID: UUID
+    ) async throws -> Data
 }

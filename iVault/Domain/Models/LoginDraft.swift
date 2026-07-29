@@ -8,7 +8,7 @@
 import Foundation
 
 /// Editable login values that exist only while the editor is active.
-struct LoginDraft: Equatable, Sendable {
+nonisolated struct LoginDraft: Equatable, Sendable {
     var title: String
     var username: String
     var password: String

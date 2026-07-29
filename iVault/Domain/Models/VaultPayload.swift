@@ -11,7 +11,7 @@ import Foundation
 ///
 /// Its encoded representation always contains a schema version, a kind
 /// discriminator, and exactly one matching payload.
-enum VaultPayload: Equatable, Sendable {
+nonisolated enum VaultPayload: Equatable, Sendable {
     static let currentSchemaVersion = 1
 
     case login(LoginSecret)

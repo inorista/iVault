@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct DecryptedVaultRecord: Codable, Equatable, Sendable {
+nonisolated struct DecryptedVaultRecord: Codable, Equatable, Sendable {
     let createdAt: Date
     let modifiedAt: Date
     let payload: VaultPayload

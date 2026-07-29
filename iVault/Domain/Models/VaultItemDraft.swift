@@ -1,7 +1,7 @@
 /// Editable values for one new or existing vault entry.
 ///
 /// Drafts are presentation inputs and must never be persisted as plaintext.
-enum VaultItemDraft: Equatable, Sendable {
+nonisolated enum VaultItemDraft: Equatable, Sendable {
     case login(LoginDraft)
     case secureNote(SecureNoteDraft)
     case image(SecureImageDraft)

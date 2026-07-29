@@ -21,13 +21,101 @@ actor VaultCryptoService {
         try VaultMasterKey(rawData: data)
     }
 
+    func sealAsset(
+        _ plainText: Data,
+        assetID: UUID,
+        generationID: UUID,
+        keyVersion: Int,
+        masterKey: VaultMasterKey
+    ) throws -> EncryptedAssetPackage {
+        let assetKey = SymmetricKey(size: .bits256)
+
+        let assetAAD = try makeAAD(
+            recordID: assetID,
+            generationID: generationID,
+            purpose: .assetData,
+            keyVersion: keyVersion
+        )
+
+        let assetBox: AES.GCM.SealedBox
+
+        do {
+            assetBox = try AES.GCM.seal(
+                plainText,
+                using: assetKey,
+                authenticating: assetAAD
+            )
+        } catch {
+            throw VaultCryptoServiceError.encryptionFailed
+        }
+
+        guard let ciphertext = assetBox.combined else {
+            throw VaultCryptoServiceError.combinedRepresentationUnavailable
+        }
+
+        let assetKeyData = assetKey.withUnsafeBytes {
+            Data($0)
+        }
+
+        let wrappedKey = try seal(
+            assetKeyData,
+            recordID: assetID,
+            generationID: generationID,
+            purpose: .assetKey,
+            keyVersion: keyVersion,
+            masterKey: masterKey
+        )
+
+        return EncryptedAssetPackage(
+            ciphertextCombined: ciphertext,
+            wrappedKey: wrappedKey
+        )
+    }
+
+    func openAsset(
+        package: EncryptedAssetPackage,
+        assetID: UUID,
+        generationID: UUID,
+        masterKey: VaultMasterKey
+    ) throws -> Data {
+        let assetKeyData = try open(
+            Data.self,
+            envelope: package.wrappedKey,
+            recordID: assetID,
+            generationID: generationID,
+            purpose: .assetKey,
+            masterKey: masterKey
+        )
+
+        guard assetKeyData.count == 32 else {
+            throw VaultCryptoServiceError.invalidMasterKey
+        }
+
+        let assetKey = SymmetricKey(data: assetKeyData)
+
+        let aad = try makeAAD(
+            recordID: assetID,
+            generationID: generationID,
+            purpose: .assetData,
+            keyVersion: package.wrappedKey.keyVersion
+        )
+
+        do {
+            let box = try AES.GCM.SealedBox(
+                combined: package.ciphertextCombined
+            )
+            return try AES.GCM.open(box, using: assetKey, authenticating: aad)
+        } catch {
+            throw VaultCryptoServiceError.authenticationFailed
+        }
+    }
+
     func open<T>(
         _ type: T.Type,
         envelope: EncryptedEnvelope,
-        recordId: UUID,
-        generationId: UUID,
+        recordID: UUID,
+        generationID: UUID,
         purpose: VaultCipherPurpose,
-        keyVersion: Int,
         masterKey: VaultMasterKey
 
     ) throws -> T where T: Decodable & Sendable {
@@ -39,15 +127,15 @@ actor VaultCryptoService {
 
         let derivedKey = deriveKey(
             from: masterKey,
-            recordId: recordId,
-            generationId: generationId,
+            recordID: recordID,
+            generationID: generationID,
             purpose: purpose,
             keyVersion: envelope.keyVersion
         )
 
         let aad = try makeAAD(
-            recordId: recordId,
-            generationId: generationId,
+            recordID: recordID,
+            generationID: generationID,
             purpose: purpose,
             keyVersion: envelope.keyVersion
         )
@@ -76,8 +164,8 @@ actor VaultCryptoService {
 
     func seal<T>(
         _ value: T,
-        recordId: UUID,
-        generationId: UUID,
+        recordID: UUID,
+        generationID: UUID,
         purpose: VaultCipherPurpose,
         keyVersion: Int,
         masterKey: VaultMasterKey
@@ -93,15 +181,15 @@ actor VaultCryptoService {
 
         let derivedKey = deriveKey(
             from: masterKey,
-            recordId: recordId,
-            generationId: generationId,
+            recordID: recordID,
+            generationID: generationID,
             purpose: purpose,
             keyVersion: keyVersion
         )
 
         let aad = try makeAAD(
-            recordId: recordId,
-            generationId: generationId,
+            recordID: recordID,
+            generationID: generationID,
             purpose: purpose,
             keyVersion: keyVersion
         )
@@ -130,16 +218,16 @@ actor VaultCryptoService {
     }
 
     private func makeAAD(
-        recordId: UUID,
-        generationId: UUID,
+        recordID: UUID,
+        generationID: UUID,
         purpose: VaultCipherPurpose,
         keyVersion: Int
     ) throws -> Data {
         let context = VaultCipherContext(
             formatVersion: Self.formatVersion,
             keyVersion: keyVersion,
-            recordId: recordId,
-            generationId: generationId,
+            recordID: recordID,
+            generationID: generationID,
             purpose: purpose
         )
 
@@ -153,14 +241,14 @@ actor VaultCryptoService {
 
     private func deriveKey(
         from masterKey: VaultMasterKey,
-        recordId: UUID,
-        generationId: UUID,
+        recordID: UUID,
+        generationID: UUID,
         purpose: VaultCipherPurpose,
         keyVersion: Int
     ) -> SymmetricKey {
         let saltString = [
-            recordId.uuidString.lowercased(),
-            generationId.uuidString.lowercased(),
+            recordID.uuidString.lowercased(),
+            generationID.uuidString.lowercased(),
         ].joined(separator: ":")
 
         let infoString = [
@@ -206,6 +294,8 @@ nonisolated enum VaultCipherPurpose: String, Codable, Sendable {
     case payload
     case assetKey
     case assetData
+    case backupManifest
+    case backupMasterKey
 }
 
 nonisolated struct VaultMasterKey: Sendable {
@@ -237,14 +327,14 @@ nonisolated struct EncryptedEnvelope: Codable, Equatable, Sendable {
 }
 
 nonisolated struct EncryptedAssetPackage: Equatable, Sendable {
-    let cipherTextCombined: Data
+    let ciphertextCombined: Data
     let wrappedKey: EncryptedEnvelope
 }
 
-nonisolated private struct VaultCipherContext: Codable {
+nonisolated private struct VaultCipherContext: Codable, Sendable {
     let formatVersion: Int
     let keyVersion: Int
-    let recordId: UUID
-    let generationId: UUID
+    let recordID: UUID
+    let generationID: UUID
     let purpose: VaultCipherPurpose
 }

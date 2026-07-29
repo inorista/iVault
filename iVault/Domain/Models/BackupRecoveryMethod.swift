@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum BackupRecoveryMethod: Sendable {
+nonisolated enum BackupRecoveryMethod: Sendable {
     case synchronizedKeychain
 
     case recoveryCode(String)

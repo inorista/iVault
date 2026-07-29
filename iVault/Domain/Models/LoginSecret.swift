@@ -8,7 +8,7 @@
 import Foundation
 
 /// The decrypted login payload for a vault entry.
-struct LoginSecret: Codable, Equatable, Sendable {
+nonisolated struct LoginSecret: Codable, Equatable, Sendable {
     let title: String
     let username: String
     let password: String

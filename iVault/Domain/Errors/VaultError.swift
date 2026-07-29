@@ -8,7 +8,7 @@
 import Foundation
 
 /// A field that can fail validation before a vault entry is saved.
-enum VaultField: String, Equatable, Sendable {
+nonisolated enum VaultField: String, Equatable, Sendable {
     case title
     case password
     case noteBody
@@ -16,7 +16,7 @@ enum VaultField: String, Equatable, Sendable {
 }
 
 /// A validation failure for a vault draft.
-enum VaultValidationError: Error, Equatable, Sendable {
+nonisolated enum VaultValidationError: Error, Equatable, Sendable {
     case requiredField(VaultField)
     case invalidWebsite
     case imageExceedsSizeLimit(maximumBytes: Int64)
@@ -26,7 +26,7 @@ enum VaultValidationError: Error, Equatable, Sendable {
 ///
 /// Framework-specific errors such as `OSStatus`, SwiftData errors, and
 /// cryptographic errors are mapped to this type at the service boundary.
-enum VaultError: Error, Equatable, Sendable {
+nonisolated enum VaultError: Error, Equatable, Sendable {
     case locked
     case itemNotFound(id: UUID)
     case assetNotFound(id: UUID)

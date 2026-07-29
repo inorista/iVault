@@ -1,7 +1,7 @@
 import Foundation
 
 /// The decrypted metadata that points to an encrypted image asset.
-struct SecureImage: Codable, Equatable, Sendable {
+nonisolated struct SecureImage: Codable, Equatable, Sendable {
     let title: String
     let assetID: UUID
     let originalFilename: String?
@@ -11,7 +11,7 @@ struct SecureImage: Codable, Equatable, Sendable {
 }
 
 /// Editable image values that exist only while the editor is active.
-struct SecureImageDraft: Equatable, Sendable {
+nonisolated struct SecureImageDraft: Equatable, Sendable {
     var title: String
     var imageData: Data?
     var originalFilename: String?

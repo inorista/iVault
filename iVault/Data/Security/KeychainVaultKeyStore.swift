@@ -8,7 +8,7 @@ import Foundation
 import LocalAuthentication
 import Security
 
-enum VaultKeyStoreError: Error, Equatable, Sendable {
+nonisolated enum VaultKeyStoreError: Error, Equatable, Sendable {
     case itemNotFound
     case interactionNotAllowed
     case authenticationFailed
@@ -18,19 +18,19 @@ enum VaultKeyStoreError: Error, Equatable, Sendable {
     case unexpectedStatus(OSStatus)
 }
 
-protocol VaultKeyStoring: Sendable {
+nonisolated protocol VaultKeyStoring: Sendable {
     func saveMasterKey(
         _ keyData: Data,
-        keyId: UUID
+        keyID: UUID
     ) async throws
 
     func loadMasterKey(
-        keyId: UUID,
+        keyID: UUID,
         reason: String
     ) async throws -> Data
 
     func deleteMasterKey(
-        keyId: UUID,
+        keyID: UUID,
         reason: String
     ) async throws
 }
@@ -45,7 +45,7 @@ actor KeychainVaultKeyStore: VaultKeyStoring {
     }
 
     private func identityQuery(
-        keyId: UUID
+        keyID: UUID
     ) -> [String: Any] {
         var query: [String: Any] = [
             kSecClass as String:
@@ -53,7 +53,7 @@ actor KeychainVaultKeyStore: VaultKeyStoring {
             kSecAttrService as String:
                 service,
             kSecAttrAccount as String:
-                account(for: keyId),
+                account(for: keyID),
             kSecAttrSynchronizable as String:
                 kCFBooleanFalse as Any,
         ]
@@ -90,11 +90,11 @@ actor KeychainVaultKeyStore: VaultKeyStoring {
 
     func saveMasterKey(
         _ keyData: Data,
-        keyId: UUID
+        keyID: UUID
     ) async throws {
         let accessControl = try makeAccessControl()
 
-        var addQuery = identityQuery(keyId: keyId)
+        var addQuery = identityQuery(keyID: keyID)
         addQuery[kSecValueData as String] = keyData
         addQuery[kSecAttrAccessControl as String] = accessControl
 
@@ -110,7 +110,7 @@ actor KeychainVaultKeyStore: VaultKeyStoring {
         case errSecDuplicateItem:
             try updateMasterKey(
                 keyData,
-                keyId: keyId
+                keyID: keyID
             )
         case errSecInteractionNotAllowed:
             throw VaultKeyStoreError.interactionNotAllowed
@@ -123,12 +123,12 @@ actor KeychainVaultKeyStore: VaultKeyStoring {
         }
     }
 
-    func deleteMasterKey(keyId: UUID, reason: String) async throws {
+    func deleteMasterKey(keyID: UUID, reason: String) async throws {
         let context = LAContext()
+        context.localizedReason = reason
 
-        var query = identityQuery(keyId: keyId)
+        var query = identityQuery(keyID: keyID)
         query[kSecUseAuthenticationContext as String] = context
-        query[kSecUseOperationPrompt as String] = reason
 
         let status = SecItemDelete(
             query as CFDictionary
@@ -152,14 +152,14 @@ actor KeychainVaultKeyStore: VaultKeyStoring {
         }
     }
 
-    func loadMasterKey(keyId: UUID, reason: String) async throws -> Data {
+    func loadMasterKey(keyID: UUID, reason: String) async throws -> Data {
         let context = LAContext()
+        context.localizedReason = reason
 
-        var query = identityQuery(keyId: keyId)
+        var query = identityQuery(keyID: keyID)
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
         query[kSecUseAuthenticationContext as String] = context
-        query[kSecUseOperationPrompt as String] = reason
 
         var result: CFTypeRef?
 
@@ -193,14 +193,13 @@ actor KeychainVaultKeyStore: VaultKeyStoring {
 
     private func updateMasterKey(
         _ keyData: Data,
-        keyId: UUID
+        keyID: UUID
     ) throws {
         let context = LAContext()
+        context.localizedReason = "Authenticate to update the iVault key."
 
-        var query = identityQuery(keyId: keyId)
+        var query = identityQuery(keyID: keyID)
         query[kSecUseAuthenticationContext as String] = context
-        query[kSecUseOperationPrompt as String] =
-            "Authenticate to update the iVault key."
 
         let attributes: [String: Any] = [
             kSecValueData as String: keyData
@@ -230,5 +229,82 @@ actor KeychainVaultKeyStore: VaultKeyStoring {
             throw VaultKeyStoreError.unexpectedStatus(status)
         }
 
+    }
+}
+
+/// A per-backup key stored separately from the biometric, device-only vault
+/// master key. Synchronizable Keychain makes automatic restore possible on a
+/// second device signed into the same iCloud Keychain account.
+nonisolated protocol BackupKeyStoring: Sendable {
+    func saveBackupKey(_ keyData: Data, backupID: UUID) async throws
+    func loadBackupKey(backupID: UUID) async throws -> Data
+    func deleteBackupKey(backupID: UUID) async throws
+}
+
+actor SynchronizedBackupKeyStore: BackupKeyStoring {
+    private let service = "com.dev.ivault.backup-key"
+
+    private func query(for backupID: UUID) -> [String: Any] {
+        var query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: "backup-key.\(backupID.uuidString.lowercased())",
+            kSecAttrSynchronizable as String: kCFBooleanTrue as Any,
+        ]
+
+        #if os(macOS)
+            query[kSecUseDataProtectionKeychain as String] = true
+        #endif
+
+        return query
+    }
+
+    func saveBackupKey(_ keyData: Data, backupID: UUID) throws {
+        var addQuery = query(for: backupID)
+        addQuery[kSecValueData as String] = keyData
+        addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+
+        let status = SecItemAdd(addQuery as CFDictionary, nil)
+        switch status {
+        case errSecSuccess:
+            return
+        case errSecDuplicateItem:
+            let updateStatus = SecItemUpdate(
+                query(for: backupID) as CFDictionary,
+                [kSecValueData as String: keyData] as CFDictionary
+            )
+            guard updateStatus == errSecSuccess else {
+                throw VaultKeyStoreError.unexpectedStatus(updateStatus)
+            }
+        default:
+            throw VaultKeyStoreError.unexpectedStatus(status)
+        }
+    }
+
+    func loadBackupKey(backupID: UUID) throws -> Data {
+        var lookup = query(for: backupID)
+        lookup[kSecReturnData as String] = true
+        lookup[kSecMatchLimit as String] = kSecMatchLimitOne
+
+        var result: CFTypeRef?
+        let status = SecItemCopyMatching(lookup as CFDictionary, &result)
+        switch status {
+        case errSecSuccess:
+            guard let data = result as? Data else {
+                throw VaultKeyStoreError.invalidReturnedData
+            }
+            return data
+        case errSecItemNotFound:
+            throw VaultKeyStoreError.itemNotFound
+        default:
+            throw VaultKeyStoreError.unexpectedStatus(status)
+        }
+    }
+
+    func deleteBackupKey(backupID: UUID) throws {
+        let status = SecItemDelete(query(for: backupID) as CFDictionary)
+        guard status == errSecSuccess || status == errSecItemNotFound else {
+            throw VaultKeyStoreError.unexpectedStatus(status)
+        }
     }
 }

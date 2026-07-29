@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct DecryptedVaultSummary: Codable, Equatable, Sendable {
+nonisolated struct DecryptedVaultSummary: Codable, Equatable, Sendable {
     let kind: VaultItemKind
     let title: String
     let subtitle: String?
