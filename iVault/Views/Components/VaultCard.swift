@@ -7,13 +7,7 @@ struct VaultCard: View {
 
     var body: some View {
         HStack(spacing: PassVaultSpacing.small) {
-            Image(systemName: item.systemImage)
-                .font(.title3)
-                .foregroundStyle(PassVaultColor.surface)
-                .frame(width: 40, height: 40)
-                .background(PassVaultColor.textPrimary)
-                .clipShape(.rect(cornerRadius: PassVaultRadius.input))
-                .accessibilityHidden(true)
+            VaultIconBadge(systemName: item.systemImage, size: 44)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.title)
@@ -37,13 +31,7 @@ struct VaultCard: View {
         }
         .foregroundStyle(PassVaultColor.textSecondary)
         .padding(PassVaultSpacing.small)
-        .background(PassVaultColor.surface)
-        .clipShape(.rect(cornerRadius: PassVaultRadius.card))
-        .overlay {
-            RoundedRectangle(cornerRadius: PassVaultRadius.card)
-                .stroke(PassVaultColor.border, lineWidth: 1)
-        }
-        .passVaultSoftShadow()
+        .vaultSurface()
     }
 }
 

@@ -9,7 +9,7 @@ import Foundation
 
 @MainActor
 @Observable
-class OnboardingViewModel {
+final class OnboardingViewModel {
     var currentStage = 0
     var onboardingItems = [OnboardingModel]()
     var isLastStage = false

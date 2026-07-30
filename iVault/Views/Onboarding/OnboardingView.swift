@@ -1,55 +1,32 @@
-//
-//  OnboardingView.swift
-//  iVault
-//
-//  Created by Tu on 26/7/26.
-//
-
 import SwiftUI
 
 struct OnboardingView: View {
-
     @State private var viewModel: OnboardingViewModel
 
-    var animation: Animation {
+    private var animation: Animation {
         .interpolatingSpring(duration: 0.65, bounce: 0, initialVelocity: 0)
     }
 
     init(userDefaultService: UserDefaultService) {
-        self._viewModel = State(
-            initialValue: OnboardingViewModel(
-                userDefaultService: userDefaultService
-            )
+        _viewModel = State(
+            initialValue: OnboardingViewModel(userDefaultService: userDefaultService)
         )
     }
 
     var body: some View {
         ZStack {
-            GeometryReader {
-                let size = $0.size
-                Color.white
-                    .frame(width: size.width, height: size.height)
-            }
-            .ignoresSafeArea()
+            Color.white.ignoresSafeArea()
 
             VStack {
                 VStack(spacing: 10) {
-                    GeometryReader {
-                        let size = $0.size
+                    GeometryReader { proxy in
+                        let size = proxy.size
+
                         ScrollView(.horizontal) {
                             HStack(spacing: 0) {
-                                ForEach(
-                                    0..<viewModel.onboardingItems
-                                        .count,
-                                    id: \.self
-                                ) {
-                                    index in
-                                    let currentItem = viewModel.onboardingItems[
-                                        index
-                                    ]
-
-                                    let isActive =
-                                        viewModel.currentStage == index
+                                ForEach(viewModel.onboardingItems.indices, id: \.self) { index in
+                                    let currentItem = viewModel.onboardingItems[index]
+                                    let isActive = viewModel.currentStage == index
 
                                     VStack(alignment: .center, spacing: 6) {
                                         Spacer()
@@ -66,21 +43,16 @@ struct OnboardingView: View {
                                             .fontWeight(.bold)
                                             .lineLimit(2)
                                             .multilineTextAlignment(.center)
-                                            .foregroundColor(
-                                                PassVaultColor.textPrimary
-                                            )
+                                            .foregroundStyle(PassVaultColor.textPrimary)
 
                                         Text(currentItem.description)
                                             .font(.system(size: 16))
                                             .fontWeight(.regular)
                                             .lineLimit(4)
                                             .multilineTextAlignment(.center)
-                                            .foregroundColor(
-                                                PassVaultColor.textSecondary
-                                            )
+                                            .foregroundStyle(PassVaultColor.textSecondary)
                                             .padding(.vertical, 16)
                                             .lineSpacing(12)
-
                                     }
                                     .padding(32)
                                     .frame(width: size.width)
@@ -95,53 +67,26 @@ struct OnboardingView: View {
                         .scrollTargetBehavior(.paging)
                         .scrollPosition(
                             id: .init(
-                                get: {
-                                    return viewModel.currentStage
-                                },
-                                set: {
-                                    _ in
-                                }
+                                get: { viewModel.currentStage },
+                                set: { _ in }
                             )
                         )
                     }
 
                     HStack(alignment: .center, spacing: 8) {
-                        ForEach(
-                            0..<viewModel.onboardingItems
-                                .count,
-                            id: \.self
-                        ) {
-                            index in
-                            let isActive =
-                                viewModel.currentStage
-                                == index
+                        ForEach(viewModel.onboardingItems.indices, id: \.self) { index in
+                            let isActive = viewModel.currentStage == index
 
                             Capsule()
-                                .fill(
-                                    Color(
-                                        isActive
-                                            ? PassVaultColor
-                                                .primary
-                                            : PassVaultColor
-                                                .border
-                                    )
-                                )
-                                .frame(
-                                    width: isActive
-                                        ? 40 : 8,
-                                    height: 8
-                                )
-                                .animation(
-                                    .bouncy(duration: 0.5),
-                                    value: isActive
-                                )
+                                .fill(isActive ? PassVaultColor.primary : PassVaultColor.border)
+                                .frame(width: isActive ? 40 : 8, height: 8)
+                                .animation(.bouncy(duration: 0.5), value: isActive)
                         }
                     }
                     .padding(.vertical, 10)
 
                     PassVaultButton(
-                        title: viewModel.isLastStage
-                            ? "Get Started" : "Next",
+                        title: viewModel.isLastStage ? "Get Started" : "Next",
                         variant: .primary,
                         action: {
                             withAnimation(animation) {
@@ -168,15 +113,8 @@ struct OnboardingView: View {
                     .frame(width: 20, height: 30)
             }
             .buttonBorderShape(.circle)
-            .frame(
-                maxWidth: .infinity,
-                maxHeight: .infinity,
-                alignment: .topLeading
-            )
-            .animation(
-                .bouncy(duration: 0.75),
-                value: viewModel.currentStage != 0
-            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .animation(.bouncy(duration: 0.75), value: viewModel.currentStage != 0)
             .opacity(viewModel.currentStage != 0 ? 1 : 0)
             .padding(.leading, 20)
             .padding(.top, 5)
@@ -185,7 +123,5 @@ struct OnboardingView: View {
 }
 
 #Preview {
-    OnboardingView(
-        userDefaultService: UserDefaultService.shared
-    )
+    OnboardingView(userDefaultService: UserDefaultService.shared)
 }

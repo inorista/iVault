@@ -1,69 +1,27 @@
 import SwiftUI
 
 struct MainScreen: View {
+    let container: AppContainer
+    let onLock: () -> Void
     @State private var selectedTab = PassVaultTab.home
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            Text("HomeScreen")
-                .toolbarBackground(.visible, for: .tabBar)
-                .toolbarBackground(.ultraThinMaterial, for: .tabBar)
-                .tabItem {
-                    Image(
-                        PassVaultTab.home.imagePath(
-                            isActive: selectedTab == .home
-                        )
-                    )
-                }
+            HomeView(vaultService: container.vaultService)
+                .tabItem { Label("Home", systemImage: "house.fill") }
                 .tag(PassVaultTab.home)
-            Text("Vault")
-                .toolbarBackground(.visible, for: .tabBar)
-                .toolbarBackground(.ultraThinMaterial, for: .tabBar)
-                .tabItem {
-                    Image(
-                        PassVaultTab.vault.imagePath(
-                            isActive: selectedTab == .vault
-                        )
-                    )
-                }
+            VaultListView(vaultService: container.vaultService)
+                .tabItem { Label("Vault", systemImage: "lock.fill") }
                 .tag(PassVaultTab.vault)
-
-            Text("Generator")
-                .toolbarBackground(.visible, for: .tabBar)
-                .toolbarBackground(.ultraThinMaterial, for: .tabBar)
-                .tabItem {
-                    Image(
-                        PassVaultTab.generator.imagePath(
-                            isActive: selectedTab == .generator
-                        )
-                    )
-                }
+            PasswordGeneratorView()
+                .tabItem { Label("Generator", systemImage: "wand.and.stars") }
                 .tag(PassVaultTab.generator)
-
-            Text("Setting")
-                .toolbarBackground(.visible, for: .tabBar)
-                .toolbarBackground(.ultraThinMaterial, for: .tabBar)
-                .tabItem {
-                    Image(
-                        PassVaultTab.settings.imagePath(
-                            isActive: selectedTab == .settings
-                        )
-                    )
-                }
-                .tag(PassVaultTab.settings)
+            SettingsView(backupService: container.backupService, onLock: onLock)
+            .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+            .tag(PassVaultTab.settings)
         }
-        .tint(.white)
-        .navigationDestination(for: AppRoute.self) { route in
-            switch route {
-            case .passwordDetail(let UUID):
-                Text("\(UUID)")
-            }
-
-        }
-        .navigationViewStyle(.stack)
+        .tint(PassVaultColor.primary)
+        .toolbarBackground(.visible, for: .tabBar)
+        .toolbarBackground(PassVaultColor.surface, for: .tabBar)
     }
-}
-
-#Preview {
-    MainScreen()
 }

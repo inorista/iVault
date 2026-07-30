@@ -7,25 +7,18 @@ struct SplashScreen: View {
 
     var body: some View {
         ZStack {
-            PassVaultColor.background
-                .ignoresSafeArea()
+            VaultScreenBackground()
 
             VStack(spacing: PassVaultSpacing.medium) {
                 ZStack {
                     Circle()
-                        .fill(PassVaultColor.background)
+                        .fill(PassVaultColor.surface)
                         .frame(width: markSize, height: markSize)
                         .shadow(
-                            color: .white.opacity(0.9),
-                            radius: 14,
-                            x: -10,
-                            y: -10
-                        )
-                        .shadow(
-                            color: PassVaultColor.textPrimary.opacity(0.12),
-                            radius: 14,
-                            x: 10,
-                            y: 10
+                            color: PassVaultColor.primary.opacity(0.22),
+                            radius: 30,
+                            x: 0,
+                            y: 16
                         )
 
                     Image(systemName: "lock.shield.fill")
@@ -42,11 +35,10 @@ struct SplashScreen: View {
 
                 VStack(spacing: PassVaultSpacing.xSmall) {
                     Text("iVault")
-                        .font(.largeTitle)
-                        .bold()
+                        .font(PassVaultTypography.display)
                         .foregroundStyle(PassVaultColor.textPrimary)
 
-                    Text("Your privacy, protected.")
+                    Text("Private by design.")
                         .font(PassVaultTypography.bodyLarge)
                         .foregroundStyle(PassVaultColor.textSecondary)
                 }
