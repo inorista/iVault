@@ -1,8 +1,9 @@
 import CoreGraphics
 
 enum PassVaultRadius {
-    static let button: CGFloat = 12
-    static let input: CGFloat = 12
-    static let card: CGFloat = 16
-    static let modal: CGFloat = 20
+    static let button: CGFloat = 18
+    static let input: CGFloat = 16
+    static let card: CGFloat = 24
+    static let modal: CGFloat = 28
+    static let pill: CGFloat = 999
 }
